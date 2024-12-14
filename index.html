@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        type="text/css" />
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+    <title>SPA semplice</title>
+</head>
+
+<body>
+    <div id="container" class="container">
+        <div id="home" class="page">
+            <h1> Home </h1>
+            <div class="row">
+                <a href="#pagina1">JavaScript asincrono</a>
+            </div>
+            <div class="row">
+                <a href="#pagina2">Promise</a>
+            </div>
+            <div class="row">
+                <a href="#pagina3">Introduzione all' informatica</a>
+            </div>
+        </div>
+        <div id="pagina1" class="page">
+            <h1> JavaScript asincrono </h1>
+            <div id="eckb-article-content-body"><h2 class="wp-block-heading" data-id="articleTOC_0">Event loop</h2>
+
+
+
+<p>La grande forza delle applicazioni Javascript è che possono aggiornare la pagina web modificando dinamicamente l’HTML. E’ quindi possibile elaborare dati dell’utente, aggiornare la pagina e renderla in tutto e per tutto simile a quella di una vera applicazione desktop. Ma c’è di più: con Javascript è possibile anche interagire con Internet, scambiando quindi dati con servizi remoti nel Web.</p>
+
+
+
+<p>Per capire come funziona dobbiamo però introdurre due nuovi concetti:</p>
+
+
+
+<p>1) Cos’è e come funziona Javascript asincrono tramite il meccanismo noto come “event loop”</p>
+
+
+
+<p>2) Come funzionano le richieste di dati su Internet, col protocollo <span class="glossaryLink" aria-describedby="tt" data-cmtooltip="<div class=glossaryItemTitle>HTTP</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Protocollo di livello applicazione che si basa su una architettura client-server dove il client invia richieste al server, ed il server restituisce risposte. E&amp;#039; la tecnologia principale del Web, usato dai browser, dalle applicazioni desktop e mobili, e costituisce una delle principali tecnologie di Internet.&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>" data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]" tabindex="0" role="link">HTTP</span>.</p>
+
+
+
+<p>Il primo argomento sarà trattato in questa sede, il secondo nella prossima lezione.</p>
+
+
+
+<p>Partiamo da queste funzioni (parte del BOM ovvero l’oggetto window):</p>
+
+
+
+<figure class="wp-block-table"><table><tbody><tr><td><strong>Funzionalità</strong></td><td><strong>Esempio</strong></td></tr><tr><td>setTimeout(funzione, x);</td><td><code>setTimeout(() =&gt; {&nbsp;&nbsp;&nbsp;&nbsp;<br>  console.log("ciao");&nbsp;<br>}, 2000);</code></td></tr><tr><td>setInterval(funzione, x);</td><td><code>const i = setInterval(() =&gt; {&nbsp;&nbsp;&nbsp;&nbsp;<br>  console.log("ciao");&nbsp;<br>}, 2000);</code></td></tr></tbody></table></figure>
+
+
+
+<p>Queste funzioni ricevono come parametro una funzione e ne schedulano l’esecuzione nel futuro (una volta o periodicamente). Questo tuttavia porta ad un comportamento non immediatamente visibile quando eseguiamo questo tipo di codice.</p>
+
+
+
+<p>Vediamo un esempio:</p>
+
+
+
+<div class="hcb_wrap"><pre class="prism line-numbers  language-js" data-lang="JavaScript"><code class=" language-js" data-hcb-clip="1"><span class="token keyword">const</span> f <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+
+   console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"1"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token function">setTimeout</span><span class="token punctuation">(</span>f<span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"2"</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><button class="hcb-clipboard" data-clipboard-target="[data-hcb-clip=&quot;1&quot;]" data-clipboard-action="copy" aria-label="Copy code to clipboard"></button></div>
+
+
+
+<p>Quello che succede è che viene prima stampato 2 e poi viene stampato 1.</p>
+
+
+
+<p>Questo perchè lo script JS con setTimeout schedula l’esecuzione della funzione f in un tempo futuro,&nbsp;<em><strong>senza fermare l’esecuzione della funzione corrente.</strong></em></p>
+
+
+
+<p>Quindi quello che succede è che lo script (o la funzione) corrente viene eseguito fino al suo completamento cioè <strong><em>fino all’ultima istruzione. </em></strong>Poi si ferma tutto e Javascript tornerà solo dopo 100ms, cioè quando sarà schedulata la funzione f.</p>
+
+
+
+<p>Ora ipotizziamo che dopo un setTimeout continuiamo ad impegnare Javascript con una elaborazione molto lunga ad esempio:</p>
+
+
+
+<div class="hcb_wrap"><pre class="prism line-numbers  language-js" data-lang="JavaScript"><code class=" language-js" data-hcb-clip="2"><span class="token keyword">const</span> f <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+  console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"1"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token function">setTimeout</span><span class="token punctuation">(</span>f<span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">;</span> i<span class="token operator">&lt;</span><span class="token number">100000000</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> 
+  console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">;</span> 
+<span class="token punctuation">}</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><button class="hcb-clipboard" data-clipboard-target="[data-hcb-clip=&quot;2&quot;]" data-clipboard-action="copy" aria-label="Copy code to clipboard"></button></div>
+
+
+
+<p>E’ probabile che il ciclo for ci metta ben di più di 100 millisecondi, e quindi sicuramente non riesce a terminare prima che parti l’esecuzione della funzione f.&nbsp;Quindi cosa succede? Che Javascript comunque termina lo script/funzione corrente, e soltanto dopo vada a vedere se c’è una funzione schedulata per il futuro.</p>
+
+
+
+<p>Quindi setTimeout <strong>non garantisce</strong> che venga eseguita esattamente dopo 100ms, ma solo che venga eseguita non prima di 100 ms. Questo perchè in JS:</p>
+
+
+
+<ul class="wp-block-list">
+<li>viene eseguita una sola funzione alla volta;</li>
+
+
+
+<li>esiste una coda di funzioni che verrà eseguita (una funzione alla volta) al termine della esecuzione della funzione corrente.</li>
+</ul>
+
+
+
+<p>Questo vuol dire che se eseguito N setTimeout con tempi anche variabili, JS aspetterà i tempi indicati e al termine metterà in coda le funzioni da eseguire dopo il timeout. </p>
+
+
+
+<p>In pratica quel che succede è il runtime di JS non fa altro che eseguire una per volta delle funzioni inserite in una&nbsp;<strong>coda di esecuzione</strong>. Ogni volta che il runtime ha finito di eseguire una funzione, controlla nella coda se è presente una nuova funzione da eseguire. Questo algoritmo, che possiamo immaginare come una specie di ciclo while infinito, viene chiamato “<strong>event loop</strong>” ed è alla base del funzionamento di Javascript.&nbsp;<a href="applewebdata://AF68B387-5F19-4988-B0D9-5EE03B019650#_ftn1"><sup>[1]</sup></a>.</p>
+
+
+
+<p>Ogni volta che eseguiamo setTimeout (o setInterval), il runtime attiva un thread in background che riceve l’istruzione, attende il tempo indicato, ed aggiunge alla coda di esecuzione la funzione richiesta.&nbsp;</p>
+
+
+
+<p>Ogni volta che il runtime finisce una funzione che sta eseguendo controlla (nel ciclo “event loop”) se c’è qualcosa in coda e lo esegue.</p>
+
+
+
+<p>Questo comportamento non vale solo per le funzioni qui sopra. Vale per esempio per la pressione di un pulsante (onclick). Anche questo caso è come se venisse creato un setTimeout (con tempo 0), il runtime (che agisce su pià thread separati, è una applicazione C++) ascolta gli eventi utente, controlla se ci sono funzioni associate, e se presenti le mette in coda di esecuzione. Ma Javascript non esegue nulla finché è in esecuzione un’altra funzione. Vedremo che sono molti altri gli eventi che possono accadere, non solo generati dall’utente, che generano l’inserimento in coda di una funzione. Anche il programmatore può generare eventi, come abbiamo visto con i setTimeout e setInterval, ma anche con oggetti ad hoc, come vedremo.</p>
+
+
+
+<p>L’algoritmo di funzionamento di Javascript altri non è che un semplice schema&nbsp;<strong>produttore-consumatore</strong>, dove sono presenti uno o più produttori (i thread secondari che aggiungono funzioni alla coda di esecuzione in seguito a qualche tipo di eventi) ed un solo consumatore, l’event lopp, che in modo ciclico svuota la coda di esecuzione. Javascript&nbsp;<strong>non garantisce mai</strong>&nbsp;quando una funzione in coda sarà eseguita, ma garantisce solo che chi è messo in coda e prima o poi sarà eseguito. Ma se è in corso un’altra operazione, le funzioni in coda devono aspettare.&nbsp;</p>
+
+
+
+<p><strong>Per questa ragione è sempre bene scrivere funzioni brevi ed evitare cicli di grande complessità, per evitare la formazione di lunghe code di esecuzione.</strong></p>
+
+
+
+<hr class="wp-block-separator has-alpha-channel-opacity">
+
+
+
+<p><a href="applewebdata://AF68B387-5F19-4988-B0D9-5EE03B019650#_ftnref1"><sup>[1]</sup></a>&nbsp;(si può verificare che effettivamente nel codice sorgente C++ di V8 è presente proprio un ciclo while).</p>
+</div>
+            <div class="row">
+                <a href="#home">Questo è un link alla Home</a>
+            </div>
+        </div>
+        <div id="pagina2" class="page">
+            <h1> PROMISE </h1>
+            <div id="eckb-article-content-body">
+                <p>Come abbiamo già visto,&nbsp;<strong>fetch </strong>crea un oggetto<strong> Promise</strong>, più precisamente
+                    una istanza della classe Promise.</p>
+            
+            
+            
+                <p>Le promise sono oggetti che vengono utilizzati per eseguire attività che richiedono un certo tempo e che quindi
+                    non possono restituire subito un risultato. Quindi per non bloccare l’interfaccia utente della pagina web, la
+                    promise costituisce uno strumento per permettere la programmatore di indicare sia l’attività da svolgere sia la
+                    callback da eseguire in caso di conclusione che quella da eseguire in caso di errore dell’attività.</p>
+            
+            
+            
+                <p>Una volta creata la promise, questa mette a disposizione due metodi:</p>
+            
+            
+            
+                <p>–&nbsp;<strong>then(successCallback)</strong>: questo metodo dopo aver eseguito l’operazione contenuta nella
+                    promise mette in coda la funzione passata come parametro (detta success callback)</p>
+            
+            
+            
+                <p>–&nbsp;<strong>catch(errorCallback)</strong>: indica la funzione che viene invece eseguita se c’è stato un
+                    errore.</p>
+            
+            
+            
+                <p>E’ possibile creare le promise direttamente creando una istanza della classe Promise. Il costruttore riceve come
+                    argomento una funzione nella seguente forma:</p>
+            
+            
+            
+                <div class="hcb_wrap">
+                    <pre class="prism line-numbers  language-js"
+                        data-lang="JavaScript"><code class=" language-js" data-hcb-clip="1"><span class="token keyword">const</span> promise <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Promise</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">resolve<span class="token punctuation">,</span> reject</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+              <span class="token keyword">try</span> <span class="token punctuation">{</span>
+                <span class="token operator">...</span> istruzioni da svolgere
+                <span class="token function">resolve</span><span class="token punctuation">(</span><span class="token operator">...</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+              <span class="token punctuation">}</span> <span class="token keyword">catch</span><span class="token punctuation">(</span>exception<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token function">reject</span><span class="token punctuation">(</span><span class="token operator">...</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+              <span class="token punctuation">}</span>
+            <span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+                    <button class="hcb-clipboard" data-clipboard-target="[data-hcb-clip=&quot;1&quot;]" data-clipboard-action="copy"
+                        aria-label="Copy code to clipboard"></button>
+                </div>
+            
+            
+            
+                <p>L’istruzione resolve esegue la successCallback (dopo la then), l’istruzione reject esegue la errorCallback (dopo
+                    la catch). Se tutto va bene verrà eseguita la successCallback, altrimenti la errorCallback (non entrambe
+                    ovviamente).</p>
+            
+            
+            
+                <p>Una promise non viene eseguita automaticamente: una volta creata è pronta per essere eseguita ma è sempre
+                    necessario eseguirla usando la <strong>then</strong> (che diventa la resolve). La catch (che diventa la catch) è
+                    invece facoltativa.</p>
+            
+            
+            
+                <p>Vediamo un esempio asincrono in cui creiamo una promise che esegue un setTimeout.</p>
+            
+            
+            
+                <div class="hcb_wrap">
+                    <pre class="prism line-numbers  language-js"
+                        data-lang="JavaScript"><code class=" language-js" data-hcb-clip="2"><span class="token keyword">const</span> timeoutPromise <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Promise</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">resolve<span class="token punctuation">,</span> reject</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+              <span class="token keyword">try</span> <span class="token punctuation">{</span>
+                <span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+                  <span class="token keyword">const</span> value <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">rand</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                  <span class="token function">resolve</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span><span class="token punctuation">;</span>
+              <span class="token punctuation">}</span> <span class="token keyword">catch</span><span class="token punctuation">(</span>exception<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token function">reject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+              <span class="token punctuation">}</span>
+            <span class="token punctuation">)</span><span class="token punctuation">;</span>
+            
+            timeoutPromise<span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">value</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">reject</span><span class="token punctuation">(</span>console<span class="token punctuation">.</span>error<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+                    <button class="hcb-clipboard" data-clipboard-target="[data-hcb-clip=&quot;2&quot;]" data-clipboard-action="copy"
+                        aria-label="Copy code to clipboard"></button>
+                </div>
+            
+            
+            
+                <p><strong>Quando si esegue il then, la promise esegue il codice previsto, e poi schedula la funzione
+                        resolve</strong>, con il catch invece viene indicata la funzione reject.</p>
+            
+            
+            
+                <p>Vediamo un altro esempio, molto utile. Con le promise possiamo eliminare il doppio passaggio di risposta di una
+                    chiamata fetch quando sappiamo che dobbiamo estrarre un JSON dalla risposta.</p>
+            
+            
+            
+                <div class="hcb_wrap">
+                    <pre class="prism line-numbers  language-js"
+                        data-lang="JavaScript"><code class=" language-js" data-hcb-clip="3"><span class="token keyword">const</span> <span class="token function-variable function">render</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter">data</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+               <span class="token operator">...</span> render instructions
+            <span class="token punctuation">}</span>
+            
+            <span class="token keyword">const</span> <span class="token function-variable function">createFetch</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter">url<span class="token punctuation">,</span> options</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+              <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">Promise</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">resolve<span class="token punctuation">,</span> reject</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+                <span class="token keyword">try</span> <span class="token punctuation">{</span>
+                  <span class="token function">fetch</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> options<span class="token punctuation">)</span>
+                  <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">response</span> <span class="token operator">=&gt;</span> response<span class="token punctuation">.</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                  <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">data</span> <span class="token operator">=&gt;</span> <span class="token function">resolve</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span>exception<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                  <span class="token function">reject</span><span class="token punctuation">(</span>exception<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span>
+              <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>  
+            
+            <span class="token function">createFetch</span><span class="token punctuation">(</span><span class="token string">"www.myservice.com"</span><span class="token punctuation">,</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span>render<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+                    <button class="hcb-clipboard" data-clipboard-target="[data-hcb-clip=&quot;3&quot;]" data-clipboard-action="copy"
+                        aria-label="Copy code to clipboard"></button>
+                </div>
+            
+            
+            
+                <p>Ipotizzando quindi di avere valorizzati url e options, ed avendo a disposizione una funzione render pronta,
+                    possiamo accorpare la doppia then in una unica then.</p>
+            </div>
+            <div class="row">
+                <a href="#home">Questo è un link alla Home</a>
+            </div>
+        </div>
+        <div id="pagina3" class="page">
+            <h1> Introduzione all'informatica </h1>
+            <div id="eckb-article-content-body">
+                <h2 class="wp-block-heading" data-id="articleTOC_0"><strong>Cosa è l’informatica</strong></h2>
+            
+            
+            
+                <p>L’informatica è quella disciplina che si occupa della gestione dell’informazione tramite strumenti automatici. E’
+                    quindi una scienza, che si occupa di studiare ed approfondire i concetti di informazione e computazione con
+                    forti connessioni con la matematica e la logica, ma anche una <span class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Tecnologia</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Disciplina che studia e ricerca a livello generale sia la progettazione di manufatti, sia le strategie per realizzarli. Indica inoltre le scienze applicate ai processi di trasformazione e realizzazione di prodotti. Essa è una generalizzazione della tecnica. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;&amp;lt;!-- wp:paragraph --&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">tecnologia</span>, che si occupa della modellizzazione e della progettazione delle
+                    macchine che in modo automatico gestiscono e manipolano l’informazione, ovvero i computer.</p>
+            
+            
+            
+                <p>Per capire il concetto di informazione partiamo da quello di dato: esso è una qualsiasi nozione, o conoscenza,
+                    che può essere memorizzata in forma digitale. Si parla di informazione quando uno o più dati sono legati tra
+                    loro da un significato. Ad esempio i caratteri “C”, “I”, “A”, “O” sono dati, ma insieme formano la parola “CIAO”
+                    che ha anche un significato.</p>
+            
+            
+            
+                <p>Il computer è una macchina in grado di memorizzare dati, di elaborarli autonomamente ed eseguire delle procedure
+                    automatiche (note come programmi) per gestirli e memorizzarli, anche in modo interattivo.</p>
+            
+            
+            
+                <p>Non bisogna fare però confusione con altri dispositivi automatici. Anche una lavatrice è un dispositivo
+                    automatico, anzi quelle più moderne sono in grado di analizzare il contenuto del cestello ed eseguire il
+                    programma di lavaggio migliore. Ciò che le differenzia però da un computer è che i programmi della lavatrice
+                    sono predefiniti dal costruttore e non possono essere modificati una volta venduta.</p>
+            
+            
+            
+                <p>Un computer invece mette a disposizione un insieme di istruzioni che possono essere utilizzate per creare
+                    programmi in grado di elaborare dati, ed una memoria per contenerli. Il calcolatore quindi non è una macchina
+                    specifica preprogrammata per uno o più scopi, ma è una macchina automatica generica in grado di essere
+                    programmata per eseguire un insieme illimitato di programmi con relativi dati. Un computer ha quindi sia un
+                    <strong>hardware</strong>, che è la sua parte fisica, sia un <strong>software</strong>, costituita dai programmi
+                    e dai dati che elabora.</p>
+            
+            
+            
+                <h2 class="wp-block-heading" data-id="articleTOC_1">Dalle macchine calcolatrici all’intelligenza artificiale</h2>
+            
+            
+            
+                <p>Un interesse per macchine in grado di svolgere calcoli in modo automatico comincia nel 600 con le prime macchine
+                    in grado di eseguire addizioni (come la Pascalina, di Blaise Pascal, nel 1600) o la macchina differenziale di
+                    Charles Babbage (prima metà dell”800), che inventò una macchina meccanica in grado di svolgere calcoli sui
+                    polinomi. Fondamentale fu il contributo di Ada Lovelace (che collaborò con Babbage) che fu la prima a proporre
+                    l’idea di una macchina programmabile proprio come la intendiamo oggi, e scrisse il primo vero programma, facendo
+                    di lei la prima programmatrice della storia, un secolo prima che venisse inventato il computer.</p>
+            
+            
+            
+                <p>Per vedere realizzato un vero computer si dovrà aspettare il XX secolo, prima di tutto grazie al genio di Alan
+                    Turing, che riuscì a dimostrare ed anzi a progettare (nel 1936) una macchina calcolatrice dotata di un insieme
+                    di istruzioni e una memoria che sarebbe stata in grado di essere programmabile per svolgere qualsiasi tipologia
+                    di calcolo (avendo a disposizione risorse adeguate). La “macchina di Turing” è il modello teorico del computer
+                    ed il fondamento di qualsiasi computer esistente oggi.</p>
+            
+            
+            
+                <p>Non esisteva ancora però una <span class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Tecnologia</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Disciplina che studia e ricerca a livello generale sia la progettazione di manufatti, sia le strategie per realizzarli. Indica inoltre le scienze applicate ai processi di trasformazione e realizzazione di prodotti. Essa è una generalizzazione della tecnica. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;&amp;lt;!-- wp:paragraph --&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">tecnologia</span> in grado di applicare la teoria di Turing: la sua idea venne poi
+                    messa in pratica per primo da John Von Neumann, che inventò la prima vera e propria macchina programmabile della
+                    storia, l’EDVAC (nel 1947) tramite una <span class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Architettura</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;L&amp;#039;architettura di un sistema informatico indica il modo in cui è organizzato il software, di quali componenti e moduli è composto, che ruolo hanno e in che modo comunicano.&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">architettura</span> detta appunto “macchina di Von Neumann”, che è ad oggi l’<span
+                        class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Architettura</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;L&amp;#039;architettura di un sistema informatico indica il modo in cui è organizzato il software, di quali componenti e moduli è composto, che ruolo hanno e in che modo comunicano.&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">architettura</span> di riferimento del computer.</p>
+            
+            
+            
+                <p>Nei primi anni di esistenza il computer era uno strumento costosissimo, con macchine che occupavano intere
+                    stanze. Era utilizzabile solo da tecnici specializzati (in camice bianco) perché non esisteva una vera
+                    interfaccia utente e veniva programmato tramite schede perforate: veniva utilizzato quindi principalmente per
+                    scopi militari, finanziari e amministrativi da organizzazioni come governi, amministrazioni e grandi banche.
+                    Solo negli anni 60, lo sviluppo dell’elettronica e dei circuiti integrati conduce a nuove generazioni di
+                    computer, che cominciano ad essere utilizzabili anche dall’industria, mentre vengono inventati i primi linguaggi
+                    di programmazione (Ada) e i sistemi operativi, in grado di semplificare la vita dei progettisti. </p>
+            
+            
+            
+                <p>Il boom dell’informatica nasce però negli anni 70: grazie alla nuova invenzione, il microprocessore (il primo fu
+                    l’Intel 4004), il computer diventa usabile anche dalle aziende normali e cominciano ad essere sviluppati
+                    computer sempre più piccoli, mentre nel frattempo viene sviluppata la rete ARPANet (rete informatica militare e
+                    accademica che poi negli anni 80 verrà rinominata in “Internet”). Grazie a queste innovazioni e l’aumento delle
+                    possibilità dell’informatica si sviluppano metodologie nuove di programmazione e progettazione, e viene
+                    inventata l'”ingegneria del software”.</p>
+            
+            
+            
+                <p>L’evoluzione esplosiva di nuovi computer sempre più piccoli e potenti (nota come “legge di Moore”) all’inizio
+                    degli anni ’80 rendono l’informatica per la prima volta un fenomeno di massa, che raggiunge tutti, col personal
+                    computer. Negli anni ’90 viene creato il web e Internet (e le interfacce grafiche, il multimedia, e i computer
+                    come li conosciamo oggi). Dopo il 2000, con l’avvento (iPhone 2008) degli smartphone l’informatica diventa
+                    mobile, con un micro computer che miliardi di persone portano in tasca e con cui rimangono sempre connessi.</p>
+            
+            
+            
+                <p>Ai giorni nostri l’ultima innovazione è “l’intelligenza artificiale”, un insieme di applicazioni software in
+                    grado, grazie all’enorme potenza di calcolo e di memorizzazione dei computer moderni, di condurre conversazioni
+                    in linguaggio naturale, riconoscere oggetti da immagini e video, e generare contenuti artificiali.</p>
+            
+            
+            
+                <p>Quel che possiamo dire è che l’informatica richiede una forte competenza sulla <span class="glossaryLink"
+                        aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Tecnologia</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Disciplina che studia e ricerca a livello generale sia la progettazione di manufatti, sia le strategie per realizzarli. Indica inoltre le scienze applicate ai processi di trasformazione e realizzazione di prodotti. Essa è una generalizzazione della tecnica. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;&amp;lt;!-- wp:paragraph --&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">tecnologia</span> del computer, ed ancora di più del fatto che la <span
+                        class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Tecnologia</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Disciplina che studia e ricerca a livello generale sia la progettazione di manufatti, sia le strategie per realizzarli. Indica inoltre le scienze applicate ai processi di trasformazione e realizzazione di prodotti. Essa è una generalizzazione della tecnica. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;&amp;lt;!-- wp:paragraph --&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">tecnologia</span> avanza e ciò che si conosce oggi fra 10 anni sarà in parte già
+                    obsoleto, costringendo l’informatico a stare sempre “al passo”.</p>
+            
+            
+            
+                <h2 class="wp-block-heading" data-id="articleTOC_2">Come funziona un computer</h2>
+            
+            
+            
+                <p>I computer anche se diversi tra loro condividono un’unica <span class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Architettura</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;L&amp;#039;architettura di un sistema informatico indica il modo in cui è organizzato il software, di quali componenti e moduli è composto, che ruolo hanno e in che modo comunicano.&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">architettura</span> comune, detta “<strong>macchina di Von Neumann</strong>“, il
+                    cui schema di funzionamento è il seguente.</p>
+            
+            
+            
+                <figure class="wp-block-image"><img fetchpriority="high" decoding="async" width="1024" height="754"
+                        src="https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93-1024x754.png" alt="" class="wp-image-648"
+                        srcset="https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93-1024x754.png 1024w, https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93-300x221.png 300w, https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93-768x566.png 768w, https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93-1000x737.png 1000w, https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93-230x169.png 230w, https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93-350x258.png 350w, https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93-480x354.png 480w, https://cipiaceinfo.it/wp-content/uploads/2024/07/image-93.png 1078w"
+                        sizes="(max-width: 1024px) 100vw, 1024px"></figure>
+            
+            
+            
+                <p>Le idee alla base di questa macchina sono:&nbsp;</p>
+            
+            
+            
+                <p><br>– un&nbsp;<strong>processore (CPU):&nbsp;</strong>esso esegue una sequenza di istruzioni (appartenenti ad un
+                    insieme predefinito di istruzioni possibile) caricate in memoria dal programmatore, che elaborano dei dati,
+                    anch’essi caricati in memoria.</p>
+            
+            
+            
+                <p>– la&nbsp;<strong>memoria</strong>&nbsp;del computer è unica e contiene quindi sia il programma (con le
+                    istruzioni da eseguire) che i dati che esso utilizza: essa viene controllata dalla CPU, che carica sia
+                    istruzioni che dati, li elabora secondo le istruzioni ricevute, e li salva nella memoria. La memoria nei
+                    computer moderni corrisponde alla RAM, ma in ogni caso la RAM è una specifica implementazione della memoria.</p>
+            
+            
+            
+                <p>– l’<strong>I/O</strong> (<strong>Input/Output</strong>) consente l’accesso con l’esterno: è un <span
+                        class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Componente</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Un componente di una applicazione è un elemento autonomo del software che svolge un compito definito. Esso comunica con gli altri componenti dell&amp;#039;applicazione e può far parte di un modulo. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">componente</span> che ha una memoria interna che memorizza i dati ricevuti
+                    dall’esterno e quelli da inviare e quindi comunica con le periferiche (tastiere, mouse, monitor, memorie di
+                    massa, rete, ecc.).</p>
+            
+            
+            
+                <p>– ogni <span class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Componente</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Un componente di una applicazione è un elemento autonomo del software che svolge un compito definito. Esso comunica con gli altri componenti dell&amp;#039;applicazione e può far parte di un modulo. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">componente</span> comunica con gli altri mediante&nbsp;<strong>bus</strong>, linee
+                    dati dedicate.</p>
+            
+            
+            
+                <p>Questo modello è stato esteso e reso col tempo più complesso, ma la sua <span class="glossaryLink"
+                        aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Architettura</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;L&amp;#039;architettura di un sistema informatico indica il modo in cui è organizzato il software, di quali componenti e moduli è composto, che ruolo hanno e in che modo comunicano.&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">architettura</span> di base ancora oggi è questa. </p>
+            
+            
+            
+                <h3 class="wp-block-heading" data-id="articleTOC_3"><strong>Come funziona la CPU?&nbsp;</strong></h3>
+            
+            
+            
+                <p>La sua attività è scandita da un <strong>clock</strong>, un <span class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Componente</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Un componente di una applicazione è un elemento autonomo del software che svolge un compito definito. Esso comunica con gli altri componenti dell&amp;#039;applicazione e può far parte di un modulo. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">componente</span> che emette un segnale temporizzato che determina il ciclo di
+                    esecuzione di una istruzione (oggi nell’ordine di Ghz, ovvero miliardi di segnali al secondo). Questo ciclo è
+                    diviso in 3 macro fasi:</p>
+            
+            
+            
+                <ol class="wp-block-list">
+                    <li><strong>fetch</strong>: viene caricato il codice dell’istruzione dalla memoria</li>
+            
+            
+            
+                    <li><strong>decode</strong>: il codice viene decodificato in una istruzione</li>
+            
+            
+            
+                    <li><strong>exec</strong>: l’istruzione viene eseguita. </li>
+                </ol>
+            
+            
+            
+                <p>Il ciclo ricomincia con l’istruzione successiva. La CPU ha una piccola memoria di lavoro, ovvero delle celle,
+                    dette registri, che memorizzano i valori tra istruzioni successive. Le istruzioni hanno tutte pari tempo di
+                    esecuzione, cioè un ciclo di clock, e devono essere molto semplici. </p>
+            
+            
+            
+                <p>Ad esempio per eseguire una semplice somma di due numeri occorrono 4 istruzioni:</p>
+            
+            
+            
+                <ol class="wp-block-list">
+                    <li>Caricare il primo valore in un primo registro </li>
+            
+            
+            
+                    <li>Caricare il secondo valore in un secondo registro</li>
+            
+            
+            
+                    <li>Eseguire la somma e salvare il valore in un terzo registro</li>
+            
+            
+            
+                    <li>Salvare il dato in memoria</li>
+                </ol>
+            
+            
+            
+                <p>Le istruzioni del processore sono memorizzate in codice (da cui la decodifica) detto “linguaggio macchina” che
+                    viene rappresentato in maniera leggibile in istruzioni dette “Assembly”. La semplicità di queste istruzioni le
+                    rende estremamente veloci ma significa anche che scrivere un programa complesso implica dove scrivere miliardi
+                    di istruzioni, cosa impossibile per un essere umano. Per risolvere questo problema nei computer vengono
+                    utilizzati dei linguaggi di programmazione detti “ad alto livello”, che permettono di eseguire istruzioni più
+                    articolate e quindi agevolare la vita del programmatore. Esistono poi dei programmi speciali (detti compilatori
+                    o interpreti) che traducono le istruzioni “ad alto livello” in istruzioni “a basso livello” (cioè nel linguaggio
+                    macchina). </p>
+            
+            
+            
+                <h3 class="wp-block-heading" data-id="articleTOC_4"><strong>Come funziona la memoria?</strong></h3>
+            
+            
+            
+                <p>Prima di tutto esistono due tipi di memoria:</p>
+            
+            
+            
+                <ul class="wp-block-list">
+                    <li>la memoria <strong>centrale</strong> del computer, descritta dalla macchina di Von Neumann. Questa memoria
+                        nei computer moderni corrisponde alla RAM, ed è una memoria molto veloce (nell’ordine dei Mhz, quindi
+                        comunque molto più lenta della CPU). Come noto, se spegnamo il computer, la memoria viene inizializzata
+                        perdendo tutti i dati è quindi <strong>temporanea</strong>.</li>
+            
+            
+            
+                    <li>la memoria di <strong>massa</strong>, che è una periferica, anche se fisicamente interna nei moderni
+                        computer e cellulari. E’ una memoria che memorizza i dati in modo <strong>permanente</strong>, mediante una
+                        struttura ad archivio che prevede cartelle e documenti. Nei computer moderni corrisponde agli SSD, gli HD,
+                        le memorie USB e le schede SD.</li>
+                </ul>
+            
+            
+            
+                <p>In memoria i dati sono memorizzati sotto forma di numeri, e tramite un sistema di numerazione binario tramite
+                    unità di memoria dette <strong>bit</strong>, che possono assumere solo il valore di 0 oppure 1. Questo è stato
+                    fatto perché è infinitamente più semplice memorizzare tramite due stati possibili, in un sistema basato su
+                    elettricità con due diverse tensioni elettriche. Quindi per rappresentare il valore 2 abbiamo bisogno di 2 bit,
+                    con valore “10”, mentre 3 sarà “11”. Per memorizzare il valore 4 usiamo tre bit: “100” e così via come in questa
+                    tabella:</p>
+            
+            
+            
+                <figure class="wp-block-table">
+                    <table class="has-fixed-layout">
+                        <tbody>
+                            <tr>
+                                <td>Decimale</td>
+                                <td>Binario</td>
+                            </tr>
+                            <tr>
+                                <td>0</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>10</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>11</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>100</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>101</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>110</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>111</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>1000</td>
+                            </tr>
+                            <tr>
+                                <td>…</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </figure>
+            
+            
+            
+                <p>Come si può vedere ogni volta che aggiungiamo un bit raddoppiamo i valori memorizzabili: con 1 bit sono 2, con 2
+                    bit sono 4, con 3 bit 8, con 4 sono 16 e così via. La regola è che con N bit si possono memorizzare 2^N valori.
+                    Le unità di misura più importanti della memoria sono:</p>
+            
+            
+            
+                <figure class="wp-block-table">
+                    <table class="has-fixed-layout">
+                        <tbody>
+                            <tr>
+                                <td><strong>byte</strong></td>
+                                <td>8 bit -&gt; 256 valori memorizzabili.</td>
+                                <td>unità di misura fondamentale della memoria.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>KiloByte (KB)</strong></td>
+                                <td>1024 byte (2^10 byte)</td>
+                                <td>documenti e testi</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MegaByte (MB)</strong></td>
+                                <td>1024 KB (2^20 byte)</td>
+                                <td>immagini</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GigaByte (GB)</strong></td>
+                                <td>1024 MB (2^30 byte)</td>
+                                <td>video</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TeraByte (TB)</strong></td>
+                                <td>1024 GB (2^40 byte)</td>
+                                <td>memorie RAM e SSD</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Petabyte (PB)</strong></td>
+                                <td>1024 TB (2^50 byte)</td>
+                                <td>grandi archivi dati su Internet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </figure>
+            
+            
+            
+                <p>Questi dati possono rappresentare informazioni come testi, immagini, video in quanto ne sono la rappresentazione
+                    tramite codici numerici (ad esempio la lettera “a” è codificata col valore 97, tramite il noto codice ASCII,
+                    mentre una immagine è codificata tramite i suoi pixel con la codifica RGB, ecc.). </p>
+            
+            
+            
+                <h3 class="wp-block-heading" data-id="articleTOC_5"><strong>Come funzionano le periferiche e le connessioni
+                        dati?</strong></h3>
+            
+            
+            
+                <p>Le periferiche sono connesse al computer mediante un <span class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Componente</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Un componente di una applicazione è un elemento autonomo del software che svolge un compito definito. Esso comunica con gli altri componenti dell&amp;#039;applicazione e può far parte di un modulo. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">componente</span> di I/O, che viene usato come una specie di memoria “temporanea”
+                    dove memorizzare i dati che transitano da e verso le periferiche. Le periferiche più note sono tastiera, mouse e
+                    monitor in un PC, oppure lo schermo touch in uno smartphone/tablet, ognuno di questi dispositivi trasforma una
+                    azione meccanica (es. pressione del tasto) in un segnale elettrico e quindi in un segnale digitale che viene
+                    trasmesso all’I/O, e poi utilizzato dalla CPU per gestire l’input. Allo stesso modo la CPU memorizza nell’I/O le
+                    informazioni che devono essere inviate alla periferica, e queste le trasforma in segnale elettrico e ad esempio
+                    nei monitor in segnale visivo per l’utente. </p>
+            
+            
+            
+                <p>Altrettanto importante è la rete, che consiste in una <span class="glossaryLink" aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Tecnologia</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Disciplina che studia e ricerca a livello generale sia la progettazione di manufatti, sia le strategie per realizzarli. Indica inoltre le scienze applicate ai processi di trasformazione e realizzazione di prodotti. Essa è una generalizzazione della tecnica. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;&amp;lt;!-- wp:paragraph --&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">tecnologia</span> informatica dove i computer si trasmettono dati digitali in unità
+                    dette pacchetti (un dato complesso viene diviso in pacchetti) e dove ogni computer su Internet ha un indirizzo
+                    specifico. La trasmissione fisica può avvenire tramite cavo o per onde radio Wifi, satellitari o tramite la rete
+                    dati cellulare (4G/5G). Esistono minicomputer che gestiscono il traffico di pacchetti, detti router. Altri tipi
+                    di connessione dati, che non usano Internet, sono le connessioni Bluteooth, che trasmettono dati a cuffie,
+                    mouse, tastiere e hanno una distanza di pochi metri.</p>
+            
+            
+            
+                <p>Importante è la misura della velocità della trasmissione, dove in questo caso l’unità di misura fondamentale è il
+                    bit. </p>
+            
+            
+            
+                <figure class="wp-block-table">
+                    <table class="has-fixed-layout">
+                        <tbody>
+                            <tr>
+                                <td><strong>bit</strong></td>
+                                <td>0 o 1</td>
+                                <td>unità di misura fondamentale della misura della velocità di trasmissione</td>
+                            </tr>
+                            <tr>
+                                <td><strong>KiloBit (Kb)/s</strong></td>
+                                <td>1024 bit (2^10 bit)</td>
+                                <td>modem (es. 56Kb) </td>
+                            </tr>
+                            <tr>
+                                <td><strong>MegaBit (Mb)/s</strong></td>
+                                <td>1024 Kb (2^20 bit)</td>
+                                <td>Bluetooth (fino a 100Mb) e Wifi (fino a 500Mb)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GigaBit (Gb)/s</strong></td>
+                                <td>1024 Mb (2^30 bit)</td>
+                                <td>Fibra ottica</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TeraBit (Tb)/s</strong></td>
+                                <td>1024 Gb (2^40 bit)</td>
+                                <td>Cavi oceanici sottomarini</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Petabit (Pb)/s</strong></td>
+                                <td>1024 Tb (2^50 bit)</td>
+                                <td>velocità di trasmissione del bus dati del computer.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </figure>
+            
+            
+            
+                <p>Le istruzioni del programma</p>
+            
+            
+            
+                <p>La CPU esegue come detto sopra un insieme di istruzioni che svolgono operazioni di tipo aritmetico (somme,
+                    sottrazioni, ecc.) e logico (confronti) e possono leggere e modificare dati che sono memorizzati in memoria e
+                    poi trasmessi/salvati verso le memorie esterne o la rete. Più specificatamente le istruzioni sono di questi
+                    tipi:</p>
+            
+            
+            
+                <ul class="wp-block-list">
+                    <li>di caricamento/memorizzazione (che caricano o salvano in memoria i dati)</li>
+            
+            
+            
+                    <li>di calcolo aritmetico/logico (che eseguono il calcolo)</li>
+            
+            
+            
+                    <li>condizionali</li>
+            
+            
+            
+                    <li>di salto</li>
+                </ul>
+            
+            
+            
+                <p>Le istruzioni <strong>condizionali</strong> sono utilizzate per verificare una condizione logica, ovvero una
+                    condizione che può essere vera o falsa, e quindi eseguire una sequenza di istruzioni oppure un’altra. Con le
+                    istruzioni condizionali possiamo quindi programmare il computer a compiere scelte in base ai dati che ha volta
+                    per volta. Le istruzioni <strong>di salto</strong> invece ci permettono di eseguire lo stesso gruppo di
+                    istruzioni più volte. Questo significa che per svolgere operazioni ripetitive (ad esempio sommare i numeri da 1
+                    a 100) dobbiamo riscrivere 100 volte le stesse istruzioni. </p>
+            
+            
+            
+                <p>Combinando opportunamente queste tipologie di istruzioni è possibile realizzare qualsiasi sequenza in grado di
+                    svolgere qualsiasi tipo di procedura, avendo tempo e memoria a sufficienza. </p>
+            
+            
+            
+                <h2 class="wp-block-heading" data-id="articleTOC_6">Gli algoritmi</h2>
+            
+            
+            
+                <p>Per capire come si programma un computer ci viene in aiuto il concetto di algoritmo. Questo consiste in una
+                    procedura che contiene una sequenza di istruzioni finita, che manipola dei dati ricevuti in input e produce,
+                    dopo una elaborazione, un output. Esso deve rispettare sei caratteristiche fondamentali:</p>
+            
+            
+            
+                <ul class="wp-block-list">
+                    <li>deve essere <strong>finito</strong> (deve cioè terminare)</li>
+            
+            
+            
+                    <li>deve essere <strong>non ambiguo</strong> (non deve avere istruzioni che si interpretano in modo differente);
+                    </li>
+            
+            
+            
+                    <li>deve essere <strong>generale</strong> (deve applicarsi a tutti i casi possibili)</li>
+            
+            
+            
+                    <li>deve essere <strong>completo</strong> (deve prevedere tutte le condizioni possibili)</li>
+            
+            
+            
+                    <li>deve essere <strong>corretto</strong></li>
+            
+            
+            
+                    <li>deve essere <strong>efficiente</strong> (non ci devono essere istruzioni inutili)</li>
+                </ul>
+            
+            
+            
+                <p>C’è una settima proprietà, ovvero che un algoritmo è <strong>deterministico</strong>, ovvero a parità di dati
+                    ingresso deve produrre lo stesso output, ma questa è una conseguenza delle altre sei nel momento in cui un
+                    algoritmo usa la pura logica.<br>Un algoritmo manipola dei dati e questi possono appartenere a 3 categorie:</p>
+            
+            
+            
+                <ul class="wp-block-list">
+                    <li>dati di <strong>input</strong>, inseriti o dall’utente o caricati dalla memoria o ricevuti dall’esterno;
+                    </li>
+            
+            
+            
+                    <li>dati di <strong>output</strong>, emessi dall’elaborazione, o salvati, o inviati all’esterno;</li>
+            
+            
+            
+                    <li>dati di <strong>lavoro</strong>, usati per svolgere l’elaborazione</li>
+                </ul>
+            
+            
+            
+                <p>Essi possono coincidere in tutto o parzialmente, a seconda dell’algoritmo. </p>
+            
+            
+            
+                <p>Gli algoritmi sono un concetto generale presente in molte discipline, come la logica/matematica, e possono essere
+                    utilizzati per descrivere molte procedure umane (si pensi alle ricette di cucina). In informatica però gli
+                    algoritmi sono associati ad un esecutore automatico, il computer, che per sua natura esegue delle istruzioni che
+                    sono:</p>
+            
+            
+            
+                <ul class="wp-block-list">
+                    <li>parte di un insieme predeterminato (come abbiamo visto sono di memorizzazione, calcolo, condizione e salto);
+                    </li>
+            
+            
+            
+                    <li>sono istruzioni formali, ovvero, le istruzioni date al computer non possono essere ambigue o interpretabili
+                        in qualche modo;</li>
+            
+            
+            
+                    <li>in generale lo spazio di memoria usabile è limitato ed esistono delle regole per la memorizzazione dei dati
+                    </li>
+                </ul>
+            
+            
+            
+                <h2 class="wp-block-heading" data-id="articleTOC_7"><strong>Cosa significa essere un informa</strong>tico</h2>
+            
+            
+            
+                <p>Realizzare programmi per computer è la principale attività che svolgono gli informatici. Questa è una attività
+                    che può diventare molto complessa se le attività richieste ed i problemi che deve risolvere sono tanti e
+                    difficili. Per questa ragione si divide normalmente questa attività in queste cinque fasi:</p>
+            
+            
+            
+                <ol class="wp-block-list">
+                    <li><strong>Analisi del problema</strong>: in questa fase si analizza la richiesta, si analizzano tutti i casi
+                        possibili e le tipologie di dati che dovranno essere utilizzati.</li>
+            
+            
+            
+                    <li><strong>Definizione dell’algoritmo</strong>: si progetta un algoritmo (o anche più di uno) che risolve il
+                        problema in modo soddisfacente.</li>
+            
+            
+            
+                    <li><strong>Codifica</strong>: si trasforma l’algoritmo in un programma in un linguaggio di programmazione.</li>
+            
+            
+            
+                    <li><strong>Test</strong>: si verifica il programma utilizzando un insieme di dati di test il cui risultato è
+                        conosciuto.</li>
+            
+            
+            
+                    <li><strong>Rilascio</strong>: si distribuisce il programma rilasciandolo al committente.</li>
+                </ol>
+            
+            
+            
+                <p>Per realizzare programmi quindi un informatico deve avere competenze in tutte e tre le aree dell’informatica:</p>
+            
+            
+            
+                <ul class="wp-block-list">
+                    <li>comprendere come organizzare i dati e le informazioni, come manipolarli con gli algoritmi, ed imparare a
+                        crearne di propri (<strong>la scienza dell’informatica</strong>);</li>
+            
+            
+            
+                    <li>conoscere le caratteristiche della programmazione e delle tecnologie correlate in modo da tradurre gli
+                        algoritmi in programmi che sfruttino le caratteristiche del computer e dell’informatica (<strong>la <span
+                                class="glossaryLink" aria-describedby="tt"
+                                data-cmtooltip="<div class=glossaryItemTitle>Tecnologia</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Disciplina che studia e ricerca a livello generale sia la progettazione di manufatti, sia le strategie per realizzarli. Indica inoltre le scienze applicate ai processi di trasformazione e realizzazione di prodotti. Essa è una generalizzazione della tecnica. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;&amp;lt;!-- wp:paragraph --&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                                data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                                tabindex="0" role="link">tecnologia</span> della programmazione</strong>);</li>
+            
+            
+            
+                    <li>padroneggiare il linguaggio anzi i linguaggi di programmazione, le tecniche di sviluppo, test e rilascio del
+                        software (<strong>la tecnica dello sviluppo</strong>).</li>
+                </ul>
+            
+            
+            
+                <p>Queste capacità si acquisiscono sia studiando la “teoria” (della scienza, della <span class="glossaryLink"
+                        aria-describedby="tt"
+                        data-cmtooltip="<div class=glossaryItemTitle>Tecnologia</div><div class=glossaryItemBody>&amp;lt;!-- wp:paragraph --&amp;gt;Disciplina che studia e ricerca a livello generale sia la progettazione di manufatti, sia le strategie per realizzarli. Indica inoltre le scienze applicate ai processi di trasformazione e realizzazione di prodotti. Essa è una generalizzazione della tecnica. &amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;&amp;lt;!-- wp:paragraph --&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;!-- /wp:paragraph --&amp;gt;</div>"
+                        data-gt-translate-attributes="[{&quot;attribute&quot;:&quot;data-cmtooltip&quot;, &quot;format&quot;:&quot;html&quot;}]"
+                        tabindex="0" role="link">tecnologia</span> e della tecnica) sia mettendola in “pratica” per consolidare le
+                    lezioni apprese con un riscontro effettivo. L’informatica non prevede quindi un apprendimento esclusivamente
+                    teorico: diventa pura erudizione senza riscontro in una effettiva applicazione, una attività puramente
+                    accademica senza riscontri nel mondo reale. Allo stesso tempo l’informatica non può essere considerata nemmeno
+                    esclusivamente pratica: un programmatore senza una capacità di comprensione anche della teoria resta un
+                    dilettante, in grado di risolvere solo specifici problemi, senza capacità di evolversi, perché non ha gli
+                    strumenti per farlo.</p>
+            
+            
+            
+                <p>L’obiettivo è quindi procedere, in tutte le aree, con un apprendimento sia teorico che pratico per ottenere un
+                    apprendimento duraturo, significativo ed efficace.</p>
+            </div>
+            <div class="row">
+                <a href="#home">Questo è un link alla Home</a>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./script.js"></script>
+</body>
+
+</html>
